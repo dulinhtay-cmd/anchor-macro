@@ -15,9 +15,14 @@ jobs:
     - name: Unzip mod.zip
       run: unzip mod.zip -d project_files
 
-    - name: Build with Gradle
+    - name: Find Build Directory and Build
       run: |
-        cd project_files
+        # Tìm thư mục chứa file build.gradle
+        BUILD_DIR=$(dirname $(find project_files -name "build.gradle" | head -n 1))
+        echo "Found build directory at: $BUILD_DIR"
+        cd "$BUILD_DIR"
+        
+        # Tiến hành build
         if [ -f "gradlew" ]; then
           chmod +x gradlew
           ./gradlew build
@@ -29,4 +34,5 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: Mod-Jar
-        path: project_files/build/libs/*.jar
+        path: |
+          project_files/**/build/libs/*.jar
