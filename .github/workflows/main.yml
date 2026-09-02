@@ -13,21 +13,43 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: '21'
           distribution: 'temurin'
-          cache: gradle
 
-      - name: Make Gradle executable
-        run: chmod +x ./gradlew
+      - name: Unzip mod.zip
+        run: |
+          mkdir -p project_files
+          unzip -o mod.zip -d project_files
+
+      - name: Find Gradle project
+        run: |
+          BUILD_DIR=$(dirname "$(find project_files -name "build.gradle" -o -name "build.gradle.kts" | head -n 1)")
+
+          if [ -z "$BUILD_DIR" ] || [ "$BUILD_DIR" = "." ]; then
+            echo "ERROR: Khong tim thay build.gradle trong mod.zip"
+            exit 1
+          fi
+
+          echo "Found build directory: $BUILD_DIR"
+          echo "BUILD_DIR=$BUILD_DIR" >> "$GITHUB_ENV"
 
       - name: Build Mod
-        run: ./gradlew clean build --no-daemon
+        run: |
+          cd "$BUILD_DIR"
+
+          if [ -f "./gradlew" ]; then
+            chmod +x ./gradlew
+            ./gradlew clean build --no-daemon
+          else
+            echo "ERROR: Khong tim thay gradlew"
+            exit 1
+          fi
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: MadAnchor-1.21.11
-          path: build/libs/*.jar
+          path: project_files/**/build/libs/*.jar
           if-no-files-found: error
