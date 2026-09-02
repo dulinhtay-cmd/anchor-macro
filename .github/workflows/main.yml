@@ -12,23 +12,23 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
+    # Sử dụng cố định bản Gradle 8.1 để không bị lỗi xung đột Fabric Loom
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v4
+      with:
+        gradle-version: '8.1'
+
     - name: Unzip mod.zip
       run: unzip mod.zip -d project_files
 
     - name: Find Build Directory and Build
       run: |
-        # Tìm thư mục chứa file build.gradle
         BUILD_DIR=$(dirname $(find project_files -name "build.gradle" | head -n 1))
         echo "Found build directory at: $BUILD_DIR"
         cd "$BUILD_DIR"
         
-        # Tiến hành build
-        if [ -f "gradlew" ]; then
-          chmod +x gradlew
-          ./gradlew build
-        else
-          gradle build
-        fi
+        # Ép buộc dùng lệnh gradle của hệ thống (bản 8.1 vừa cài)
+        gradle build
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
